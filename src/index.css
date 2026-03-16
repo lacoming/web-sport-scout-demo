@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0f1c;
+  --color-bg-card: #111827;
+  --color-accent-cyan: #22d3ee;
+  --color-accent-orange: #f97316;
+  --color-field-green: #1a472a;
+  --font-data: "JetBrains Mono", monospace;
+  --font-text: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #0a0f1c;
+  color: #e5e7eb;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+/* Radar polygon animation */
+@keyframes radar-scale-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes radar-dots-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes player-pop-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+@keyframes pulse-zone {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.animate-radar-polygon {
+  animation: radar-scale-in 600ms ease-out forwards;
+  transform-origin: center;
+}
+
+.animate-radar-dots {
+  animation: radar-dots-in 400ms ease-out 500ms forwards;
+  opacity: 0;
+}
+
+.animate-player-pop {
+  animation: player-pop-in 400ms ease-out forwards;
+  transform-origin: center;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.3s ease-in-out infinite;
+}
+
+.animate-pulse-zone {
+  animation: pulse-zone 1.5s ease-in-out infinite;
+}
+
+/* Card flip */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
