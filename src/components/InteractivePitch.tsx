@@ -19,7 +19,6 @@ export function InteractivePitch() {
   const [drawingArrow, setDrawingArrow] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   const handleDrag = useCallback((id: number, x: number, y: number) => {
-    // Convert SVG coords to percentage
     const px = Math.max(2, Math.min(98, (x / PITCH_WIDTH) * 100));
     const py = Math.max(2, Math.min(98, (y / PITCH_HEIGHT) * 100));
     setPlayers((prev) => prev.map((p) => (p.id === id ? { ...p, x: px, y: py } : p)));
@@ -84,6 +83,14 @@ export function InteractivePitch() {
           <marker id="arrowhead" markerWidth={10} markerHeight={7} refX={10} refY={3.5} orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
           </marker>
+          <filter id="player-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <radialGradient id="player-hover-grad">
+            <stop offset="0%" stopColor="rgba(34,211,238,0.2)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
         </defs>
 
         <FootballPitch>
@@ -99,6 +106,7 @@ export function InteractivePitch() {
               strokeWidth={2}
               strokeDasharray="6,3"
               markerEnd="url(#arrowhead)"
+              opacity={0.8}
             />
           ))}
 
@@ -112,7 +120,7 @@ export function InteractivePitch() {
               stroke="#22d3ee"
               strokeWidth={2}
               strokeDasharray="6,3"
-              opacity={0.6}
+              opacity={0.5}
               markerEnd="url(#arrowhead)"
             />
           )}
@@ -134,20 +142,31 @@ export function InteractivePitch() {
                 onMouseLeave={() => setHoveredPlayer(null)}
                 onMouseDown={(e) => toolMode === 'move' && handleMouseDown(player.id, e)}
               >
-                {/* Glow on hover */}
+                {/* Ambient glow on hover */}
                 {isHovered && (
-                  <circle cx={px} cy={py} r={r + 6} fill="rgba(34,211,238,0.15)" />
+                  <circle cx={px} cy={py} r={r + 16} fill="url(#player-hover-grad)" />
+                )}
+                {/* Glow ring on hover/drag */}
+                {(isHovered || isDragged) && (
+                  <circle
+                    cx={px}
+                    cy={py}
+                    r={r + 4}
+                    fill="none"
+                    stroke="rgba(34,211,238,0.2)"
+                    strokeWidth={2}
+                  />
                 )}
                 {/* Player circle */}
                 <circle
                   cx={px}
                   cy={py}
                   r={r}
-                  fill={player.position === 'GK' ? '#374151' : '#111827'}
-                  stroke={isHovered || isDragged ? '#22d3ee' : 'rgba(255,255,255,0.3)'}
-                  strokeWidth={isHovered || isDragged ? 2.5 : 1.5}
-                  className="transition-all duration-200"
+                  fill={player.position === 'GK' ? '#374151' : 'rgba(17,24,39,0.9)'}
+                  stroke={isHovered || isDragged ? '#22d3ee' : 'rgba(255,255,255,0.25)'}
+                  strokeWidth={isHovered || isDragged ? 2 : 1.5}
                   style={{ cursor: toolMode === 'move' ? 'grab' : 'pointer' }}
+                  filter={isHovered || isDragged ? 'url(#player-glow)' : undefined}
                 />
                 {/* Number */}
                 <text
@@ -168,7 +187,7 @@ export function InteractivePitch() {
                   x={px}
                   y={py + r + 14}
                   textAnchor="middle"
-                  fill="rgba(255,255,255,0.8)"
+                  fill="rgba(255,255,255,0.7)"
                   fontSize={10}
                   fontFamily="'Plus Jakarta Sans', sans-serif"
                   fontWeight={500}
@@ -195,14 +214,14 @@ export function InteractivePitch() {
               ['ФИЗ', stats.physical],
             ] as const;
             return (
-              <g>
-                <rect x={cardX} y={cardY} width={100} height={96} rx={8} fill="#111827" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+              <g className="animate-fade-in-up">
+                <rect x={cardX} y={cardY} width={100} height={96} rx={10} fill="rgba(17,24,39,0.95)" stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
                 <text x={cardX + 50} y={cardY + 16} textAnchor="middle" fill="#22d3ee" fontSize={11} fontWeight={700} fontFamily="'Plus Jakarta Sans', sans-serif">
                   {hoveredPlayer.name}
                 </text>
                 {entries.map(([label, val], i) => (
                   <g key={label}>
-                    <text x={cardX + 10} y={cardY + 34 + i * 13} fill="rgba(255,255,255,0.5)" fontSize={9} fontFamily="'JetBrains Mono', monospace">
+                    <text x={cardX + 10} y={cardY + 34 + i * 13} fill="rgba(255,255,255,0.4)" fontSize={9} fontFamily="'JetBrains Mono', monospace">
                       {label}
                     </text>
                     <text x={cardX + 90} y={cardY + 34 + i * 13} textAnchor="end" fill="white" fontSize={9} fontWeight={600} fontFamily="'JetBrains Mono', monospace">
@@ -217,15 +236,15 @@ export function InteractivePitch() {
       </svg>
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-2 bg-bg-card rounded-xl p-2 border border-white/6">
+      <div className="flex flex-col gap-2 rounded-xl p-2 glass-card">
         {TOOL_MODES.map(({ mode, label, icon }) => (
           <button
             key={mode}
             onClick={() => setToolMode(mode)}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-[family-name:var(--font-text)] font-medium transition-all cursor-pointer ${
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-[family-name:var(--font-text)] font-medium transition-all duration-300 cursor-pointer ${
               toolMode === mode
-                ? 'bg-accent-cyan/20 text-accent-cyan'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-accent-cyan/15 text-accent-cyan shadow-[inset_0_0_12px_rgba(34,211,238,0.1)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
             <span className="text-base">{icon}</span>
